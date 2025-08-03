@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>EtherOS Catcher</title>
+  <script src="https://unpkg.com/kaboom/dist/kaboom.js"></script>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      touch-action: none;
+    }
+    canvas {
+      display: block;
+      margin: auto;
+    }
+  </style>
+</head>
+<body>
+<script>
+  kaboom({
+    background: [163, 216, 244],
+    width: 480,
+    height: 640,
+    scale: 1,
+  });
+
+  loadSprite("etheros", "https://i.imgur.com/dWz6LFl.png"); // EtherOS logo
+  loadSprite("token", "https://i.imgur.com/OdL0XPt.png");   // Token $AIR
+  loadSound("catch", "https://cdn.pixabay.com/download/audio/2022/03/15/audio_7e8367a736.mp3?filename=click-124467.mp3");
+
+  let highScore = 0;
+
+  scene("start", () => {
+    add([
+      text("EtherOS Catcher", { size: 32 }),
+      pos(center().x, center().y - 60),
+      anchor("center")
+    ]);
+
+    add([
+      text("Tap or Press Space to Start", { size: 16 }),
+      pos(center()),
+      anchor("center")
+    ]);
+
+    onKeyPress("space", () => go("game"));
+    onClick(() => go("game"));
+  });
+
+  scene("game", () => {
+    let score = 0;
+
+    const scoreLabel = add([
+      text("Score: 0"),
+      pos(12, 12),
+      layer("ui"),
+    ]);
+
+    const player = add([
+      sprite("etheros"),
+      pos(center().x, height() - 60),
+      scale(0.2),
+      area(),
+      anchor("center"),
+      "player"
+    ]);
+
+    // Move player
+    keyDown("left", () => player.move(-200, 0));
+    keyDown("right", () => player.move(200, 0));
+
+    // Mobile touch controls
+    onTouchStart((pos) => {
+      if (pos.x < width() / 2) {
+        player.move(-300, 0);
+      } else {
+        player.move(300, 0);
+      }
+    });
+
+    const tokenLoop = loop(1, () => {
+      const x = rand(0, width() - 32);
+      const token = add([
+        sprite("token"),
+        pos(x, 0),
+        area(),
+        scale(0.1),
+        move(DOWN, 120),
+        "token"
+      ]);
+
+      // Check if token missed
+      token.onUpdate(() => {
+        if (token.pos.y > height()) {
+          destroy(token);
+          go("gameover", score);
+        }
+      });
+    });
+
+    onCollide("player", "token", (p, token) => {
+      destroy(token);
+      play("catch");
+      score++;
+      scoreLabel.text = "Score: " + score;
+    });
+  });
+
+  scene("gameover", (score) => {
+    if (score > highScore) highScore = score;
+
+    add([
+      text("Game Over", { size: 32 }),
+      pos(center().x, center().y - 80),
+      anchor("center")
+    ]);
+
+    add([
+      text("Score: " + score + "\nHigh Score: " + highScore, { size: 20, lineSpacing: 8 }),
+      pos(center()),
+      anchor("center")
+    ]);
+
+    add([
+      text("Tap or Press Space to Restart", { size: 16 }),
+      pos(center().x, center().y + 80),
+      anchor("center")
+    ]);
+
+    onKeyPress("space", () => go("game"));
+    onClick(() => go("game"));
+  });
+
+  go("start");
+</script>
+</body>
+</html>
