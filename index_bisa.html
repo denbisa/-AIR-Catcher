@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>$AIR Catcher</title>
+  <script src="https://unpkg.com/kaboom/dist/kaboom.js"></script>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: #111;
+      overflow: hidden;
+    }
+    canvas {
+      display: block;
+      margin: auto;
+    }
+  </style>
+</head>
+<body>
+<script>
+  kaboom({
+    background: [50, 50, 50], // Lebih terang
+    width: 480,
+    height: 640,
+    scale: 1,
+  });
+
+  layers(["game", "ui"], "game");
+
+  scene("game", () => {
+    const scoreLabel = add([
+      text("Score: 0"),
+      pos(12, 12),
+      layer("ui"),
+      { value: 0 },
+    ]);
+
+    const player = add([
+      rect(48, 24),
+      pos(center().x - 24, height() - 40),
+      area(),
+      color(255, 255, 255),
+      "player"
+    ]);
+
+    keyDown("left", () => {
+      player.move(-200, 0);
+    });
+
+    keyDown("right", () => {
+      player.move(200, 0);
+    });
+
+    loop(1, () => {
+      const x = rand(0, width() - 24);
+      const token = add([
+        rect(24, 24),
+        pos(x, 0),
+        area(),
+        color(255, 215, 0),
+        move(DOWN, 100),
+        cleanup(),
+        "token"
+      ]);
+    });
+
+    onCollide("player", "token", (p, token) => {
+      destroy(token);
+      scoreLabel.value++;
+      scoreLabel.text = "Score: " + scoreLabel.value;
+    });
+  });
+
+  go("game");
+</script>
+</body>
+</html>
