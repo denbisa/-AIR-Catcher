@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>EtherOS Catcher</title>
+  <script src="https://unpkg.com/kaboom/dist/kaboom.js"></script>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+    }
+    canvas {
+      display: block;
+      margin: auto;
+    }
+  </style>
+</head>
+<body>
+<script>
+  kaboom({
+    background: [163, 216, 244], // Biru muda
+    width: 480,
+    height: 640,
+    scale: 1,
+  });
+
+  // Load assets
+  loadSprite("etheros", "https://i.imgur.com/dWz6LFl.png"); // Logo EtherOS (contoh)
+  loadSprite("token", "https://i.imgur.com/OdL0XPt.png");   // Token $AIR
+  loadSound("catch", "https://cdn.pixabay.com/download/audio/2022/03/15/audio_7e8367a736.mp3?filename=click-124467.mp3");
+
+  layers(["game", "ui"], "game");
+
+  scene("game", () => {
+    // Score UI
+    const scoreLabel = add([
+      text("Score: 0"),
+      pos(12, 12),
+      layer("ui"),
+      { value: 0 },
+    ]);
+
+    // Player
+    const player = add([
+      sprite("etheros"),
+      pos(center().x, height() - 60),
+      scale(0.2),
+      area(),
+      anchor("center"),
+      "player"
+    ]);
+
+    // Movement
+    keyDown("left", () => {
+      player.move(-200, 0);
+    });
+    keyDown("right", () => {
+      player.move(200, 0);
+    });
+
+    // Spawn token loop
+    loop(1, () => {
+      const x = rand(0, width() - 32);
+      add([
+        sprite("token"),
+        pos(x, 0),
+        area(),
+        scale(0.1),
+        move(DOWN, 100),
+        cleanup(),
+        "token"
+      ]);
+    });
+
+    // Collision
+    onCollide("player", "token", (p, token) => {
+      destroy(token);
+      play("catch");
+      scoreLabel.value++;
+      scoreLabel.text = "Score: " + scoreLabel.value;
+    });
+  });
+
+  go("game");
+</script>
+</body>
+</html>
